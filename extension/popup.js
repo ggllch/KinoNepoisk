@@ -41,6 +41,142 @@ const filters = {
   countries: [],
 };
 
+const GENRE_OPTIONS = [
+  { value: "", label: "Любой" },
+  { value: "боевик", label: "Боевик" },
+  { value: "комедия", label: "Комедия" },
+  { value: "драма", label: "Драма" },
+  { value: "фантастика", label: "Фантастика" },
+  { value: "фэнтези", label: "Фэнтези" },
+  { value: "триллер", label: "Триллер" },
+  { value: "ужасы", label: "Ужасы" },
+  { value: "мелодрама", label: "Мелодрама" },
+  { value: "детектив", label: "Детектив" },
+  { value: "приключения", label: "Приключения" },
+  { value: "криминал", label: "Криминал" },
+  { value: "военный", label: "Военный" },
+  { value: "история", label: "История" },
+  { value: "биография", label: "Биография" },
+  { value: "спорт", label: "Спорт" },
+  { value: "музыка", label: "Музыка" },
+  { value: "мюзикл", label: "Мюзикл" },
+  { value: "western", label: "Вестерн" },
+  { value: "мультфильм", label: "Мультфильм" },
+  { value: "аниме", label: "Аниме" },
+  { value: "семейный", label: "Семейный" },
+  { value: "детский", label: "Детский" },
+  { value: "документальный", label: "Документальный" },
+  { value: "короткометражка", label: "Короткий метр" },
+];
+
+const COUNTRY_OPTIONS = [
+  { value: "", label: "Любая" },
+  { value: "Россия", label: "Россия" },
+  { value: "США", label: "США" },
+  { value: "СССР", label: "СССР" },
+  { value: "Великобритания", label: "Британия" },
+  { value: "Франция", label: "Франция" },
+  { value: "Германия", label: "Германия" },
+  { value: "Корея Южная", label: "Корея" },
+  { value: "Япония", label: "Япония" },
+  { value: "Китай", label: "Китай" },
+  { value: "Индия", label: "Индия" },
+  { value: "Испания", label: "Испания" },
+  { value: "Италия", label: "Италия" },
+  { value: "Канада", label: "Канада" },
+  { value: "Турция", label: "Турция" },
+];
+
+function buildWheel(scroller, options) {
+  scroller.innerHTML = "";
+  for (const option of options) {
+    const item = document.createElement("div");
+    item.className = "wheel-item";
+    item.dataset.value = option.value;
+    item.textContent = option.label;
+    scroller.appendChild(item);
+  }
+}
+
+function wheelSelectedValue(scroller) {
+  const items = [...scroller.querySelectorAll(".wheel-item")];
+  if (!items.length) return "";
+  const center = scroller.scrollTop + scroller.clientHeight / 2;
+  let best = items[0];
+  let bestDist = Infinity;
+  for (const item of items) {
+    const mid = item.offsetTop + item.offsetHeight / 2;
+    const dist = Math.abs(mid - center);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = item;
+    }
+  }
+  return best.dataset.value || "";
+}
+
+function markWheelSelection(scroller) {
+  const value = wheelSelectedValue(scroller);
+  for (const item of scroller.querySelectorAll(".wheel-item")) {
+    item.classList.toggle("is-selected", item.dataset.value === value);
+  }
+  return value;
+}
+
+function setWheelValue(scroller, value, smooth = false) {
+  const items = [...scroller.querySelectorAll(".wheel-item")];
+  const target =
+    items.find((item) => item.dataset.value === String(value ?? "")) || items[0];
+  if (!target) return;
+  const top =
+    target.offsetTop - (scroller.clientHeight / 2 - target.offsetHeight / 2);
+  scroller.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
+  markWheelSelection(scroller);
+}
+
+function bindWheel(scroller) {
+  let snapTimer = null;
+
+  const snap = () => {
+    const items = [...scroller.querySelectorAll(".wheel-item")];
+    if (!items.length) return;
+    const center = scroller.scrollTop + scroller.clientHeight / 2;
+    let best = items[0];
+    let bestDist = Infinity;
+    for (const item of items) {
+      const mid = item.offsetTop + item.offsetHeight / 2;
+      const dist = Math.abs(mid - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = item;
+      }
+    }
+    const top =
+      best.offsetTop - (scroller.clientHeight / 2 - best.offsetHeight / 2);
+    scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+    markWheelSelection(scroller);
+  };
+
+  scroller.addEventListener("scroll", () => {
+    markWheelSelection(scroller);
+    clearTimeout(snapTimer);
+    snapTimer = setTimeout(snap, 80);
+  });
+
+  scroller.addEventListener("click", (event) => {
+    const item = event.target.closest(".wheel-item");
+    if (!item || !scroller.contains(item)) return;
+    setWheelValue(scroller, item.dataset.value, true);
+  });
+}
+
+const genreScroller = document.getElementById("filter-genres");
+const countryScroller = document.getElementById("filter-countries");
+buildWheel(genreScroller, GENRE_OPTIONS);
+buildWheel(countryScroller, COUNTRY_OPTIONS);
+bindWheel(genreScroller);
+bindWheel(countryScroller);
+
 function renderEnabled(enabled) {
   checkbox.checked = enabled;
 }
@@ -74,12 +210,6 @@ function selectedChipValue(container) {
   return active ? active.dataset.value : "";
 }
 
-function selectedChipValues(container) {
-  return [...container.querySelectorAll(".chip.active")]
-    .map((el) => el.dataset.value)
-    .filter(Boolean);
-}
-
 function setSingleChip(container, value) {
   for (const chip of container.querySelectorAll(".chip")) {
     const isActive = chip.dataset.value === String(value ?? "");
@@ -92,8 +222,10 @@ function syncFiltersFromUi() {
   filters.ratingMin = selectedChipValue(document.getElementById("filter-rating"));
   filters.ratingMin = filters.ratingMin ? Number(filters.ratingMin) : null;
   filters.sort = selectedChipValue(document.getElementById("filter-sort")) || "relevance";
-  filters.genres = selectedChipValues(document.getElementById("filter-genres"));
-  filters.countries = selectedChipValues(document.getElementById("filter-countries"));
+  const genre = markWheelSelection(genreScroller);
+  const country = markWheelSelection(countryScroller);
+  filters.genres = genre ? [genre] : [];
+  filters.countries = country ? [country] : [];
 
   const from = yearFromInput.value.trim();
   const to = yearToInput.value.trim();
@@ -109,12 +241,8 @@ function syncUiFromFilters() {
   );
   setSingleChip(document.getElementById("filter-sort"), filters.sort || "relevance");
 
-  for (const chip of document.querySelectorAll("#filter-genres .chip")) {
-    chip.classList.toggle("active", filters.genres.includes(chip.dataset.value));
-  }
-  for (const chip of document.querySelectorAll("#filter-countries .chip")) {
-    chip.classList.toggle("active", filters.countries.includes(chip.dataset.value));
-  }
+  setWheelValue(genreScroller, filters.genres[0] || "");
+  setWheelValue(countryScroller, filters.countries[0] || "");
 
   yearFromInput.value = filters.yearFrom ?? "";
   yearToInput.value = filters.yearTo ?? "";
@@ -146,6 +274,10 @@ function openFilters() {
   syncUiFromFilters();
   filtersOverlay.hidden = false;
   filtersBtn.setAttribute("aria-expanded", "true");
+  requestAnimationFrame(() => {
+    setWheelValue(genreScroller, filters.genres[0] || "");
+    setWheelValue(countryScroller, filters.countries[0] || "");
+  });
 }
 
 function closeFilters() {
@@ -384,8 +516,8 @@ function bindChipGroup(container) {
 bindChipGroup(document.getElementById("filter-type"));
 bindChipGroup(document.getElementById("filter-rating"));
 bindChipGroup(document.getElementById("filter-sort"));
-bindChipGroup(document.getElementById("filter-genres"));
-bindChipGroup(document.getElementById("filter-countries"));
+setWheelValue(genreScroller, "");
+setWheelValue(countryScroller, "");
 
 chrome.storage.sync.get(DEFAULTS, (data) => {
   renderEnabled(data.enabled !== false);

@@ -163,52 +163,25 @@
           </section>
 
           <section class="filter-group">
-            <h3>Жанры</h3>
-            <div class="chips wrap" id="filter-genres">
-              <button type="button" class="chip" data-value="боевик">Боевик</button>
-              <button type="button" class="chip" data-value="комедия">Комедия</button>
-              <button type="button" class="chip" data-value="драма">Драма</button>
-              <button type="button" class="chip" data-value="фантастика">Фантастика</button>
-              <button type="button" class="chip" data-value="фэнтези">Фэнтези</button>
-              <button type="button" class="chip" data-value="триллер">Триллер</button>
-              <button type="button" class="chip" data-value="ужасы">Ужасы</button>
-              <button type="button" class="chip" data-value="мелодрама">Мелодрама</button>
-              <button type="button" class="chip" data-value="детектив">Детектив</button>
-              <button type="button" class="chip" data-value="приключения">Приключения</button>
-              <button type="button" class="chip" data-value="криминал">Криминал</button>
-              <button type="button" class="chip" data-value="военный">Военный</button>
-              <button type="button" class="chip" data-value="история">История</button>
-              <button type="button" class="chip" data-value="биография">Биография</button>
-              <button type="button" class="chip" data-value="спорт">Спорт</button>
-              <button type="button" class="chip" data-value="музыка">Музыка</button>
-              <button type="button" class="chip" data-value="мюзикл">Мюзикл</button>
-              <button type="button" class="chip" data-value="western">Вестерн</button>
-              <button type="button" class="chip" data-value="мультфильм">Мультфильм</button>
-              <button type="button" class="chip" data-value="аниме">Аниме</button>
-              <button type="button" class="chip" data-value="семейный">Семейный</button>
-              <button type="button" class="chip" data-value="детский">Детский</button>
-              <button type="button" class="chip" data-value="документальный">Документальный</button>
-              <button type="button" class="chip" data-value="короткометражка">Короткий метр</button>
-            </div>
-          </section>
-
-          <section class="filter-group">
-            <h3>Страны</h3>
-            <div class="chips wrap" id="filter-countries">
-              <button type="button" class="chip" data-value="Россия">Россия</button>
-              <button type="button" class="chip" data-value="США">США</button>
-              <button type="button" class="chip" data-value="СССР">СССР</button>
-              <button type="button" class="chip" data-value="Великобритания">Британия</button>
-              <button type="button" class="chip" data-value="Франция">Франция</button>
-              <button type="button" class="chip" data-value="Германия">Германия</button>
-              <button type="button" class="chip" data-value="Корея Южная">Корея</button>
-              <button type="button" class="chip" data-value="Япония">Япония</button>
-              <button type="button" class="chip" data-value="Китай">Китай</button>
-              <button type="button" class="chip" data-value="Индия">Индия</button>
-              <button type="button" class="chip" data-value="Испания">Испания</button>
-              <button type="button" class="chip" data-value="Италия">Италия</button>
-              <button type="button" class="chip" data-value="Канада">Канада</button>
-              <button type="button" class="chip" data-value="Турция">Турция</button>
+            <div class="wheels">
+              <div class="wheel-col">
+                <h3>Жанр</h3>
+                <div class="wheel" id="wheel-genre" data-wheel="genre">
+                  <div class="wheel-fade-top" aria-hidden="true"></div>
+                  <div class="wheel-highlight" aria-hidden="true"></div>
+                  <div class="wheel-fade-bottom" aria-hidden="true"></div>
+                  <div class="wheel-scroller" id="filter-genres" tabindex="0"></div>
+                </div>
+              </div>
+              <div class="wheel-col">
+                <h3>Страна</h3>
+                <div class="wheel" id="wheel-country" data-wheel="country">
+                  <div class="wheel-fade-top" aria-hidden="true"></div>
+                  <div class="wheel-highlight" aria-hidden="true"></div>
+                  <div class="wheel-fade-bottom" aria-hidden="true"></div>
+                  <div class="wheel-scroller" id="filter-countries" tabindex="0"></div>
+                </div>
+              </div>
             </div>
           </section>
         </div>
