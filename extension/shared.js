@@ -2,6 +2,7 @@
   const DEFAULTS = {
     enabled: true,
     askBeforeRedirect: true,
+    gridCells: 6,
     domain: "www.kinokino.vip",
     siteName: "Kinokino",
     // старое поле — для миграции

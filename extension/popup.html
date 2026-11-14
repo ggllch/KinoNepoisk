@@ -63,11 +63,22 @@
           </button>
         </div>
 
+        <div class="sort-row" id="filter-sort" data-single="true" aria-label="Сортировка">
+          <button type="button" class="chip active" data-value="relevance">Поиск</button>
+          <button type="button" class="chip" data-value="rating">Рейтинг</button>
+          <button type="button" class="chip" data-value="year-desc">Новые</button>
+          <button type="button" class="chip" data-value="year-asc">Старые</button>
+          <button type="button" class="chip" data-value="title">А–Я</button>
+        </div>
+
         <p id="search-status" class="search-status" hidden></p>
       </section>
 
       <section class="results-slot" aria-label="Результаты">
-        <div id="results" class="results"></div>
+        <div id="results" class="results">
+          <div id="results-grid" class="results-grid"></div>
+          <p id="results-hint" class="results-hint">Введите название фильма или сериала</p>
+        </div>
       </section>
 
       <a
@@ -81,15 +92,13 @@
       </a>
     </main>
 
-    <div id="settings-overlay" class="filters-overlay" hidden>
-      <div class="filters-sheet settings-sheet" role="dialog" aria-label="Настройки">
-        <div class="filters-sheet-head">
+    <div id="settings-overlay" class="sheet-overlay" hidden>
+      <div class="sheet" role="dialog" aria-label="Настройки">
+        <div class="sheet-head">
           <strong>Настройки</strong>
-          <button id="settings-close" type="button" class="icon-btn" aria-label="Закрыть">
-            ✕
-          </button>
+          <button id="settings-close" type="button" class="icon-btn" aria-label="Закрыть">✕</button>
         </div>
-        <div class="filters-sheet-body">
+        <div class="sheet-body">
           <div class="settings-grid">
             <label>
               Домен
@@ -100,9 +109,19 @@
               <input id="site-name" type="text" spellcheck="false" placeholder="Kinokino" />
             </label>
           </div>
+          <label class="settings-field">
+            Ячеек в сетке
+            <select id="grid-cells">
+              <option value="4">4 (2×2)</option>
+              <option value="6" selected>6 (3×2)</option>
+              <option value="8">8 (4×2)</option>
+              <option value="9">9 (3×3)</option>
+              <option value="12">12 (4×3)</option>
+            </select>
+          </label>
           <label class="settings-check" for="ask-before">
             <input id="ask-before" type="checkbox" checked />
-            <span>Спрашивать перед переходом на странице Кинопоиска (вместо автозамены)</span>
+            <span>Спрашивать перед переходом на странице Кинопоиска</span>
           </label>
           <div class="settings-actions">
             <button id="save-settings" type="button" class="btn">Сохранить</button>
@@ -112,16 +131,14 @@
       </div>
     </div>
 
-    <div id="filters-overlay" class="filters-overlay" hidden>
-      <div class="filters-sheet" role="dialog" aria-label="Фильтры">
-        <div class="filters-sheet-head">
+    <div id="filters-overlay" class="sheet-overlay" hidden>
+      <div class="sheet" role="dialog" aria-label="Фильтры">
+        <div class="sheet-head">
           <strong>Фильтры</strong>
-          <button id="filters-close" type="button" class="icon-btn" aria-label="Закрыть">
-            ✕
-          </button>
+          <button id="filters-close" type="button" class="icon-btn" aria-label="Закрыть">✕</button>
         </div>
 
-        <div class="filters-sheet-body">
+        <div class="sheet-body">
           <section class="filter-group">
             <h3>Тип</h3>
             <div class="chips" id="filter-type" data-single="true">
@@ -152,43 +169,43 @@
           </section>
 
           <section class="filter-group">
-            <h3>Сортировка</h3>
-            <div class="chips" id="filter-sort" data-single="true">
-              <button type="button" class="chip active" data-value="relevance">Поиск</button>
-              <button type="button" class="chip" data-value="rating">Рейтинг</button>
-              <button type="button" class="chip" data-value="year-desc">Новые</button>
-              <button type="button" class="chip" data-value="year-asc">Старые</button>
-              <button type="button" class="chip" data-value="title">А–Я</button>
-            </div>
-          </section>
-
-          <section class="filter-group">
-            <div class="wheels">
-              <div class="wheel-col">
-                <h3>Жанр</h3>
-                <div class="wheel" id="wheel-genre" data-wheel="genre">
-                  <div class="wheel-fade-top" aria-hidden="true"></div>
-                  <div class="wheel-highlight" aria-hidden="true"></div>
-                  <div class="wheel-fade-bottom" aria-hidden="true"></div>
-                  <div class="wheel-scroller" id="filter-genres" tabindex="0"></div>
-                </div>
-              </div>
-              <div class="wheel-col">
-                <h3>Страна</h3>
-                <div class="wheel" id="wheel-country" data-wheel="country">
-                  <div class="wheel-fade-top" aria-hidden="true"></div>
-                  <div class="wheel-highlight" aria-hidden="true"></div>
-                  <div class="wheel-fade-bottom" aria-hidden="true"></div>
-                  <div class="wheel-scroller" id="filter-countries" tabindex="0"></div>
-                </div>
-              </div>
+            <h3>Жанр и страна</h3>
+            <div class="picker-triggers">
+              <button id="genre-trigger" type="button" class="picker-trigger">
+                <span class="picker-label">Жанр</span>
+                <span id="genre-value" class="picker-value">Любой</span>
+              </button>
+              <button id="country-trigger" type="button" class="picker-trigger">
+                <span class="picker-label">Страна</span>
+                <span id="country-value" class="picker-value">Любая</span>
+              </button>
             </div>
           </section>
         </div>
 
-        <div class="filters-sheet-foot">
+        <div class="sheet-foot">
           <button id="filters-reset" type="button" class="btn ghost">Сбросить</button>
           <button id="filters-apply" type="button" class="btn">Применить</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="wheel-overlay" class="sheet-overlay wheel-overlay" hidden>
+      <div class="sheet wheel-sheet" role="dialog" aria-label="Выбор">
+        <div class="sheet-head">
+          <strong id="wheel-title">Выбор</strong>
+          <button id="wheel-close" type="button" class="icon-btn" aria-label="Закрыть">✕</button>
+        </div>
+        <div class="sheet-body wheel-body">
+          <div class="wheel" id="wheel">
+            <div class="wheel-fade-top" aria-hidden="true"></div>
+            <div class="wheel-highlight" aria-hidden="true"></div>
+            <div class="wheel-fade-bottom" aria-hidden="true"></div>
+            <div class="wheel-scroller" id="wheel-scroller" tabindex="0"></div>
+          </div>
+        </div>
+        <div class="sheet-foot">
+          <button id="wheel-done" type="button" class="btn">Готово</button>
         </div>
       </div>
     </div>

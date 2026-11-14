@@ -9,10 +9,12 @@ const siteSubtitle = document.getElementById("site-subtitle");
 const domainInput = document.getElementById("domain");
 const siteNameInput = document.getElementById("site-name");
 const askBeforeInput = document.getElementById("ask-before");
+const gridCellsInput = document.getElementById("grid-cells");
 const saveButton = document.getElementById("save-settings");
 const saveStatus = document.getElementById("save-status");
 const searchInput = document.getElementById("search");
 const resultsEl = document.getElementById("results");
+const resultsGrid = document.getElementById("results-grid");
 const searchStatus = document.getElementById("search-status");
 const filtersBtn = document.getElementById("filters-btn");
 const filtersBadge = document.getElementById("filters-badge");
@@ -25,10 +27,21 @@ const settingsOverlay = document.getElementById("settings-overlay");
 const settingsClose = document.getElementById("settings-close");
 const yearFromInput = document.getElementById("year-from");
 const yearToInput = document.getElementById("year-to");
+const genreTrigger = document.getElementById("genre-trigger");
+const countryTrigger = document.getElementById("country-trigger");
+const genreValueEl = document.getElementById("genre-value");
+const countryValueEl = document.getElementById("country-value");
+const wheelOverlay = document.getElementById("wheel-overlay");
+const wheelTitle = document.getElementById("wheel-title");
+const wheelScroller = document.getElementById("wheel-scroller");
+const wheelClose = document.getElementById("wheel-close");
+const wheelDone = document.getElementById("wheel-done");
 
 let searchTimer = null;
 let searchSeq = 0;
 let lastResults = [];
+let gridCells = DEFAULTS.gridCells;
+let activeWheel = null;
 const objectUrls = new Set();
 
 const filters = {
@@ -37,8 +50,8 @@ const filters = {
   yearTo: null,
   ratingMin: null,
   sort: "relevance",
-  genres: [],
-  countries: [],
+  genre: "",
+  country: "",
 };
 
 const GENRE_OPTIONS = [
@@ -87,21 +100,56 @@ const COUNTRY_OPTIONS = [
   { value: "Турция", label: "Турция" },
 ];
 
-function buildWheel(scroller, options) {
-  scroller.innerHTML = "";
+function layoutForCells(n) {
+  const cells = [4, 6, 8, 9, 12].includes(Number(n)) ? Number(n) : 6;
+  let cols = 3;
+  if (cells === 4) cols = 2;
+  else if (cells === 8 || cells === 12) cols = 4;
+  else cols = 3;
+  return { cells, cols, rows: Math.ceil(cells / cols) };
+}
+
+function applyGridLayout() {
+  const { cells, cols, rows } = layoutForCells(gridCells);
+  gridCells = cells;
+  document.documentElement.style.setProperty("--cols", String(cols));
+  document.documentElement.style.setProperty("--rows", String(rows));
+
+  const cardPad = 24;
+  const gridPad = 16;
+  const gap = 8;
+  const meta = 28;
+  const width = 360 - cardPad - gridPad;
+  const cellW = (width - (cols - 1) * gap) / cols;
+  const cellH = cellW * 1.5 + meta;
+  const height = rows * cellH + (rows - 1) * gap + gridPad;
+  resultsEl.style.height = `${Math.min(Math.round(height), 420)}px`;
+}
+
+function optionLabel(options, value) {
+  return options.find((o) => o.value === value)?.label || options[0].label;
+}
+
+function updatePickerLabels() {
+  genreValueEl.textContent = optionLabel(GENRE_OPTIONS, filters.genre);
+  countryValueEl.textContent = optionLabel(COUNTRY_OPTIONS, filters.country);
+}
+
+function buildWheel(options) {
+  wheelScroller.innerHTML = "";
   for (const option of options) {
     const item = document.createElement("div");
     item.className = "wheel-item";
     item.dataset.value = option.value;
     item.textContent = option.label;
-    scroller.appendChild(item);
+    wheelScroller.appendChild(item);
   }
 }
 
-function wheelSelectedValue(scroller) {
-  const items = [...scroller.querySelectorAll(".wheel-item")];
+function wheelSelectedValue() {
+  const items = [...wheelScroller.querySelectorAll(".wheel-item")];
   if (!items.length) return "";
-  const center = scroller.scrollTop + scroller.clientHeight / 2;
+  const center = wheelScroller.scrollTop + wheelScroller.clientHeight / 2;
   let best = items[0];
   let bestDist = Infinity;
   for (const item of items) {
@@ -115,67 +163,64 @@ function wheelSelectedValue(scroller) {
   return best.dataset.value || "";
 }
 
-function markWheelSelection(scroller) {
-  const value = wheelSelectedValue(scroller);
-  for (const item of scroller.querySelectorAll(".wheel-item")) {
+function markWheelSelection() {
+  const value = wheelSelectedValue();
+  for (const item of wheelScroller.querySelectorAll(".wheel-item")) {
     item.classList.toggle("is-selected", item.dataset.value === value);
   }
   return value;
 }
 
-function setWheelValue(scroller, value, smooth = false) {
-  const items = [...scroller.querySelectorAll(".wheel-item")];
+function setWheelValue(value, smooth = false) {
+  const items = [...wheelScroller.querySelectorAll(".wheel-item")];
   const target =
     items.find((item) => item.dataset.value === String(value ?? "")) || items[0];
   if (!target) return;
   const top =
-    target.offsetTop - (scroller.clientHeight / 2 - target.offsetHeight / 2);
-  scroller.scrollTo({ top: Math.max(0, top), behavior: smooth ? "smooth" : "auto" });
-  markWheelSelection(scroller);
+    target.offsetTop - (wheelScroller.clientHeight / 2 - target.offsetHeight / 2);
+  wheelScroller.scrollTo({
+    top: Math.max(0, top),
+    behavior: smooth ? "smooth" : "auto",
+  });
+  markWheelSelection();
 }
 
-function bindWheel(scroller) {
-  let snapTimer = null;
-
-  const snap = () => {
-    const items = [...scroller.querySelectorAll(".wheel-item")];
-    if (!items.length) return;
-    const center = scroller.scrollTop + scroller.clientHeight / 2;
-    let best = items[0];
-    let bestDist = Infinity;
-    for (const item of items) {
-      const mid = item.offsetTop + item.offsetHeight / 2;
-      const dist = Math.abs(mid - center);
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = item;
-      }
-    }
-    const top =
-      best.offsetTop - (scroller.clientHeight / 2 - best.offsetHeight / 2);
-    scroller.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-    markWheelSelection(scroller);
-  };
-
-  scroller.addEventListener("scroll", () => {
-    markWheelSelection(scroller);
-    clearTimeout(snapTimer);
-    snapTimer = setTimeout(snap, 80);
-  });
-
-  scroller.addEventListener("click", (event) => {
-    const item = event.target.closest(".wheel-item");
-    if (!item || !scroller.contains(item)) return;
-    setWheelValue(scroller, item.dataset.value, true);
-  });
+function openWheel(kind) {
+  activeWheel = kind;
+  const options = kind === "genre" ? GENRE_OPTIONS : COUNTRY_OPTIONS;
+  const value = kind === "genre" ? filters.genre : filters.country;
+  wheelTitle.textContent = kind === "genre" ? "Жанр" : "Страна";
+  buildWheel(options);
+  wheelOverlay.hidden = false;
+  requestAnimationFrame(() => setWheelValue(value));
 }
 
-const genreScroller = document.getElementById("filter-genres");
-const countryScroller = document.getElementById("filter-countries");
-buildWheel(genreScroller, GENRE_OPTIONS);
-buildWheel(countryScroller, COUNTRY_OPTIONS);
-bindWheel(genreScroller);
-bindWheel(countryScroller);
+function closeWheel(commit) {
+  if (commit && activeWheel) {
+    const value = markWheelSelection();
+    if (activeWheel === "genre") filters.genre = value;
+    else filters.country = value;
+    updatePickerLabels();
+  }
+  activeWheel = null;
+  wheelOverlay.hidden = true;
+}
+
+let wheelSnapTimer = null;
+wheelScroller.addEventListener("scroll", () => {
+  markWheelSelection();
+  clearTimeout(wheelSnapTimer);
+  wheelSnapTimer = setTimeout(() => {
+    const value = wheelSelectedValue();
+    setWheelValue(value, true);
+  }, 80);
+});
+
+wheelScroller.addEventListener("click", (event) => {
+  const item = event.target.closest(".wheel-item");
+  if (!item) return;
+  setWheelValue(item.dataset.value, true);
+});
 
 function renderEnabled(enabled) {
   checkbox.checked = enabled;
@@ -212,8 +257,7 @@ function selectedChipValue(container) {
 
 function setSingleChip(container, value) {
   for (const chip of container.querySelectorAll(".chip")) {
-    const isActive = chip.dataset.value === String(value ?? "");
-    chip.classList.toggle("active", isActive);
+    chip.classList.toggle("active", chip.dataset.value === String(value ?? ""));
   }
 }
 
@@ -222,10 +266,6 @@ function syncFiltersFromUi() {
   filters.ratingMin = selectedChipValue(document.getElementById("filter-rating"));
   filters.ratingMin = filters.ratingMin ? Number(filters.ratingMin) : null;
   filters.sort = selectedChipValue(document.getElementById("filter-sort")) || "relevance";
-  const genre = markWheelSelection(genreScroller);
-  const country = markWheelSelection(countryScroller);
-  filters.genres = genre ? [genre] : [];
-  filters.countries = country ? [country] : [];
 
   const from = yearFromInput.value.trim();
   const to = yearToInput.value.trim();
@@ -240,12 +280,9 @@ function syncUiFromFilters() {
     filters.ratingMin == null ? "" : String(filters.ratingMin)
   );
   setSingleChip(document.getElementById("filter-sort"), filters.sort || "relevance");
-
-  setWheelValue(genreScroller, filters.genres[0] || "");
-  setWheelValue(countryScroller, filters.countries[0] || "");
-
   yearFromInput.value = filters.yearFrom ?? "";
   yearToInput.value = filters.yearTo ?? "";
+  updatePickerLabels();
 }
 
 function filtersActiveCount() {
@@ -253,9 +290,8 @@ function filtersActiveCount() {
   if (filters.type) count += 1;
   if (filters.yearFrom || filters.yearTo) count += 1;
   if (filters.ratingMin) count += 1;
-  if (filters.sort && filters.sort !== "relevance") count += 1;
-  count += filters.genres.length;
-  count += filters.countries.length;
+  if (filters.genre) count += 1;
+  if (filters.country) count += 1;
   return count;
 }
 
@@ -274,15 +310,12 @@ function openFilters() {
   syncUiFromFilters();
   filtersOverlay.hidden = false;
   filtersBtn.setAttribute("aria-expanded", "true");
-  requestAnimationFrame(() => {
-    setWheelValue(genreScroller, filters.genres[0] || "");
-    setWheelValue(countryScroller, filters.countries[0] || "");
-  });
 }
 
 function closeFilters() {
   filtersOverlay.hidden = true;
   filtersBtn.setAttribute("aria-expanded", "false");
+  if (!wheelOverlay.hidden) closeWheel(false);
 }
 
 function resetFilters() {
@@ -291,8 +324,8 @@ function resetFilters() {
   filters.yearTo = null;
   filters.ratingMin = null;
   filters.sort = "relevance";
-  filters.genres = [];
-  filters.countries = [];
+  filters.genre = "";
+  filters.country = "";
   syncUiFromFilters();
   updateFiltersButton();
 }
@@ -377,18 +410,23 @@ function renderEmptySlot() {
   empty.setAttribute("aria-hidden", "true");
   const tile = document.createElement("div");
   tile.className = "result-empty-tile";
-  empty.appendChild(tile);
-  resultsEl.appendChild(empty);
+  const meta = document.createElement("span");
+  meta.className = "result-meta";
+  empty.append(tile, meta);
+  resultsGrid.appendChild(empty);
 }
 
 function renderResults(items) {
   clearObjectUrls();
-  resultsEl.innerHTML = "";
+  resultsGrid.innerHTML = "";
+  applyGridLayout();
 
   const list = items || [];
+  const { cells } = layoutForCells(gridCells);
+
   if (!list.length) {
     resultsEl.classList.add("is-empty");
-    for (let i = 0; i < 6; i += 1) renderEmptySlot();
+    for (let i = 0; i < cells; i += 1) renderEmptySlot();
     return;
   }
 
@@ -421,11 +459,9 @@ function renderResults(items) {
     btn.appendChild(meta);
 
     btn.addEventListener("click", () => openResult(item));
-    resultsEl.appendChild(btn);
+    resultsGrid.appendChild(btn);
   }
 }
-
-renderResults([]);
 
 async function openResult(item) {
   const response = await chrome.runtime.sendMessage({
@@ -445,15 +481,14 @@ async function openResult(item) {
 
 function buildSearchQuery(raw) {
   const parts = [raw.trim()];
-  for (const genre of filters.genres) {
-    if (!parts.join(" ").toLowerCase().includes(genre.toLowerCase())) {
-      parts.push(genre);
-    }
+  if (filters.genre && !parts.join(" ").toLowerCase().includes(filters.genre.toLowerCase())) {
+    parts.push(filters.genre);
   }
-  for (const country of filters.countries) {
-    if (!parts.join(" ").toLowerCase().includes(country.toLowerCase())) {
-      parts.push(country);
-    }
+  if (
+    filters.country &&
+    !parts.join(" ").toLowerCase().includes(filters.country.toLowerCase())
+  ) {
+    parts.push(filters.country);
   }
   return parts.filter(Boolean).join(" ").trim();
 }
@@ -495,7 +530,7 @@ function scheduleSearch() {
   searchTimer = setTimeout(() => runSearch(searchInput.value), 280);
 }
 
-function bindChipGroup(container) {
+function bindChipGroup(container, onChange) {
   const single = container.dataset.single === "true";
   container.addEventListener("click", (event) => {
     const chip = event.target.closest(".chip");
@@ -506,22 +541,28 @@ function bindChipGroup(container) {
         el.classList.remove("active");
       }
       chip.classList.add("active");
-      return;
+    } else {
+      chip.classList.toggle("active");
     }
-
-    chip.classList.toggle("active");
+    onChange?.();
   });
 }
 
 bindChipGroup(document.getElementById("filter-type"));
 bindChipGroup(document.getElementById("filter-rating"));
-bindChipGroup(document.getElementById("filter-sort"));
-setWheelValue(genreScroller, "");
-setWheelValue(countryScroller, "");
+bindChipGroup(document.getElementById("filter-sort"), () => {
+  filters.sort = selectedChipValue(document.getElementById("filter-sort")) || "relevance";
+  if (lastResults.length) {
+    renderResults(applyFilters(lastResults));
+  }
+});
 
 chrome.storage.sync.get(DEFAULTS, (data) => {
   renderEnabled(data.enabled !== false);
   askBeforeInput.checked = data.askBeforeRedirect !== false;
+  gridCells = layoutForCells(data.gridCells).cells;
+  gridCellsInput.value = String(gridCells);
+
   let domain = data.domain;
   if (!domain && data.urlTemplate) domain = domainFromTemplate(data.urlTemplate);
   domain = normalizeDomain(domain || DEFAULTS.domain);
@@ -529,6 +570,7 @@ chrome.storage.sync.get(DEFAULTS, (data) => {
   domainInput.value = domain;
   siteNameInput.value = siteName;
   renderSiteLabel(siteName);
+  renderResults([]);
 });
 
 checkbox.addEventListener("change", () => {
@@ -540,10 +582,17 @@ askBeforeInput.addEventListener("change", () => {
   chrome.storage.sync.set({ askBeforeRedirect: askBeforeInput.checked });
 });
 
+gridCellsInput.addEventListener("change", () => {
+  gridCells = layoutForCells(gridCellsInput.value).cells;
+  chrome.storage.sync.set({ gridCells });
+  renderResults(lastResults.length ? applyFilters(lastResults) : []);
+});
+
 saveButton.addEventListener("click", () => {
   const domain = normalizeDomain(domainInput.value || DEFAULTS.domain);
   const siteName = (siteNameInput.value || DEFAULTS.siteName).trim() || DEFAULTS.siteName;
   const askBeforeRedirect = askBeforeInput.checked;
+  gridCells = layoutForCells(gridCellsInput.value).cells;
   const sample = buildTargetUrl(domain, { type: "film", id: "301" });
   if (!sample) {
     saveStatus.hidden = false;
@@ -552,14 +601,19 @@ saveButton.addEventListener("click", () => {
     return;
   }
 
-  chrome.storage.sync.set({ domain, siteName, askBeforeRedirect }, () => {
-    domainInput.value = domain;
-    siteNameInput.value = siteName;
-    renderSiteLabel(siteName);
-    saveStatus.hidden = false;
-    saveStatus.style.color = "";
-    saveStatus.textContent = "Сохранено";
-  });
+  chrome.storage.sync.set(
+    { domain, siteName, askBeforeRedirect, gridCells },
+    () => {
+      domainInput.value = domain;
+      siteNameInput.value = siteName;
+      gridCellsInput.value = String(gridCells);
+      renderSiteLabel(siteName);
+      renderResults(lastResults.length ? applyFilters(lastResults) : []);
+      saveStatus.hidden = false;
+      saveStatus.style.color = "";
+      saveStatus.textContent = "Сохранено";
+    }
+  );
 });
 
 settingsBtn.addEventListener("click", openSettings);
@@ -572,6 +626,14 @@ filtersBtn.addEventListener("click", openFilters);
 filtersClose.addEventListener("click", closeFilters);
 filtersOverlay.addEventListener("click", (event) => {
   if (event.target === filtersOverlay) closeFilters();
+});
+
+genreTrigger.addEventListener("click", () => openWheel("genre"));
+countryTrigger.addEventListener("click", () => openWheel("country"));
+wheelClose.addEventListener("click", () => closeWheel(false));
+wheelDone.addEventListener("click", () => closeWheel(true));
+wheelOverlay.addEventListener("click", (event) => {
+  if (event.target === wheelOverlay) closeWheel(false);
 });
 
 filtersReset.addEventListener("click", () => {
@@ -589,6 +651,10 @@ searchInput.addEventListener("input", scheduleSearch);
 
 searchInput.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (!wheelOverlay.hidden) {
+      closeWheel(false);
+      return;
+    }
     if (!filtersOverlay.hidden) {
       closeFilters();
       return;
@@ -606,8 +672,11 @@ searchInput.addEventListener("keydown", (event) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
-  if (!filtersOverlay.hidden) closeFilters();
+  if (!wheelOverlay.hidden) closeWheel(false);
+  else if (!filtersOverlay.hidden) closeFilters();
   else if (!settingsOverlay.hidden) closeSettings();
 });
 
 updateFiltersButton();
+applyGridLayout();
+renderResults([]);
