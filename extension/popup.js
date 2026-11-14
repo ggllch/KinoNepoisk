@@ -101,14 +101,15 @@ const COUNTRY_OPTIONS = [
 ];
 
 function layoutForCells(n) {
-  // Always prefer 2 rows and grow in width.
+  // Always 2 rows; grow in width. Map legacy 9 → 10.
+  const raw = Number(n) === 9 ? 10 : Number(n);
   const allowed = {
     6: { cols: 3, rows: 2 },
     8: { cols: 4, rows: 2 },
-    9: { cols: 5, rows: 2 },
+    10: { cols: 5, rows: 2 },
     12: { cols: 6, rows: 2 },
   };
-  const cells = allowed[Number(n)] ? Number(n) : 6;
+  const cells = allowed[raw] ? raw : 6;
   const { cols, rows } = allowed[cells];
   return { cells, cols, rows };
 }
@@ -117,16 +118,15 @@ function applyGridLayout() {
   const { cells, cols, rows } = layoutForCells(gridCells);
   gridCells = cells;
 
-  const GAP = 8;
-  const CARD_PAD = 12;
-  const GRID_PAD = 8;
-  const META = 24;
-  const CHROME_H = 128; // header + search + sort + gaps (donate is corner)
-  const MAX_W = 700;
+  const GAP = 6;
+  const CARD_PAD = 10;
+  const GRID_PAD = 6;
+  const META = 28;
+  const CHROME_H = 122;
+  const MAX_W = 720;
   const MAX_H = 560;
 
-  // Wider layouts use slightly smaller posters so height stays compact.
-  let cellW = cols <= 3 ? 104 : cols === 4 ? 92 : cols === 5 ? 84 : 78;
+  let cellW = cols <= 3 ? 110 : cols === 4 ? 98 : cols === 5 ? 88 : 80;
   let popupW = CARD_PAD * 2 + GRID_PAD * 2 + cols * cellW + (cols - 1) * GAP;
   if (popupW > MAX_W) {
     cellW = (MAX_W - CARD_PAD * 2 - GRID_PAD * 2 - (cols - 1) * GAP) / cols;

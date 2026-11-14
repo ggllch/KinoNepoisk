@@ -1,10 +1,10 @@
 # KinoNepoisk (для друзей)
 
-Локальная сборка расширения **v1.4.8**.
+Локальная сборка расширения **v1.4.9**.
 
 ## Скачать
 
-В [Releases](https://github.com/ggllch/KinoNepoisk/releases/latest) лежит файл `KinoNepoisk-1.4.8.zip`.
+В [Releases](https://github.com/ggllch/KinoNepoisk/releases/latest) лежит файл `KinoNepoisk-1.4.9.zip`.
 
 ## Установка (Chrome / Edge / Яндекс)
 

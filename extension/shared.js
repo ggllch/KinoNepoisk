@@ -2,7 +2,7 @@
   const DEFAULTS = {
     enabled: true,
     askBeforeRedirect: true,
-    gridCells: 6, // 6 | 8 | 9 | 12 (always 2 rows, grows in width)
+    gridCells: 6, // 6 | 8 | 10 | 12 (always 2 rows, grows in width)
     domain: "www.kinokino.vip",
     siteName: "Kinokino",
     // старое поле — для миграции
