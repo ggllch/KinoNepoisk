@@ -8,6 +8,7 @@ const checkbox = document.getElementById("enabled");
 const siteSubtitle = document.getElementById("site-subtitle");
 const domainInput = document.getElementById("domain");
 const siteNameInput = document.getElementById("site-name");
+const askBeforeInput = document.getElementById("ask-before");
 const saveButton = document.getElementById("save-settings");
 const saveStatus = document.getElementById("save-status");
 const searchInput = document.getElementById("search");
@@ -238,24 +239,11 @@ async function loadPoster(img, item) {
   img.replaceWith(ph);
 }
 
-// Сразу резервируем сетку 3x2
-renderResults([]);
-
-function renderEmptySlot() {
-  const empty = document.createElement("div");
-  empty.className = "result-empty";
-  empty.setAttribute("aria-hidden", "true");
-  const tile = document.createElement("div");
-  tile.className = "result-empty-tile";
-  empty.appendChild(tile);
-  resultsEl.appendChild(empty);
-}
-
 function renderResults(items) {
   clearObjectUrls();
   resultsEl.innerHTML = "";
 
-  const list = (items || []).slice(0, 6);
+  const list = items || [];
   for (const item of list) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -285,10 +273,6 @@ function renderResults(items) {
 
     btn.addEventListener("click", () => openResult(item));
     resultsEl.appendChild(btn);
-  }
-
-  for (let i = list.length; i < 6; i += 1) {
-    renderEmptySlot();
   }
 }
 
@@ -386,6 +370,7 @@ bindChipGroup(document.getElementById("filter-countries"));
 
 chrome.storage.sync.get(DEFAULTS, (data) => {
   renderEnabled(data.enabled !== false);
+  askBeforeInput.checked = data.askBeforeRedirect !== false;
   let domain = data.domain;
   if (!domain && data.urlTemplate) domain = domainFromTemplate(data.urlTemplate);
   domain = normalizeDomain(domain || DEFAULTS.domain);
@@ -400,9 +385,14 @@ checkbox.addEventListener("change", () => {
   chrome.storage.sync.set({ enabled }, () => renderEnabled(enabled));
 });
 
+askBeforeInput.addEventListener("change", () => {
+  chrome.storage.sync.set({ askBeforeRedirect: askBeforeInput.checked });
+});
+
 saveButton.addEventListener("click", () => {
   const domain = normalizeDomain(domainInput.value || DEFAULTS.domain);
   const siteName = (siteNameInput.value || DEFAULTS.siteName).trim() || DEFAULTS.siteName;
+  const askBeforeRedirect = askBeforeInput.checked;
   const sample = buildTargetUrl(domain, { type: "film", id: "301" });
   if (!sample) {
     saveStatus.hidden = false;
@@ -411,7 +401,7 @@ saveButton.addEventListener("click", () => {
     return;
   }
 
-  chrome.storage.sync.set({ domain, siteName }, () => {
+  chrome.storage.sync.set({ domain, siteName, askBeforeRedirect }, () => {
     domainInput.value = domain;
     siteNameInput.value = siteName;
     renderSiteLabel(siteName);

@@ -20,6 +20,7 @@ async function getSettings() {
   domain = normalizeDomain(domain || DEFAULTS.domain);
   return {
     enabled: data.enabled !== false,
+    askBeforeRedirect: data.askBeforeRedirect !== false,
     domain,
     siteName: (data.siteName || DEFAULTS.siteName).trim() || DEFAULTS.siteName,
     urlTemplate: templateFromDomain(domain),
@@ -251,6 +252,7 @@ chrome.runtime.onInstalled.addListener(async () => {
   domain = normalizeDomain(domain || DEFAULTS.domain);
   await chrome.storage.sync.set({
     enabled: current.enabled !== false,
+    askBeforeRedirect: current.askBeforeRedirect !== false,
     domain,
     siteName: current.siteName || DEFAULTS.siteName,
   });
@@ -274,6 +276,7 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 
   const settings = await getSettings();
   if (!settings.enabled) return;
+  if (settings.askBeforeRedirect) return;
 
   const rewritten = rewriteKinopoiskUrl(details.url, settings.domain);
   if (!rewritten || rewritten === details.url) return;
@@ -298,6 +301,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
         id: message.id,
       });
       sendResponse({ ok: Boolean(url), url });
+    });
+    return true;
+  }
+
+  if (message?.type === "pageOffer") {
+    getSettings().then((settings) => {
+      if (!settings.enabled || !settings.askBeforeRedirect) {
+        sendResponse({ ok: true, show: false });
+        return;
+      }
+      const url = buildTargetUrl(settings.domain, {
+        type: message.itemType,
+        id: message.id,
+      });
+      sendResponse({
+        ok: Boolean(url),
+        show: Boolean(url),
+        url,
+        siteName: settings.siteName,
+      });
     });
     return true;
   }

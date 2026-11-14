@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "KinoNepoisk",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Автозамена ссылок Кинопоиска, поиск фильмов и настраиваемый домен",
   "permissions": ["storage", "webNavigation", "tabs"],
   "host_permissions": [
@@ -11,6 +11,19 @@
     "*://st.kp.yandex.net/*",
     "*://avatars.mds.yandex.net/*",
     "*://*.yandex.net/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://kinopoisk.ru/film/*",
+        "*://kinopoisk.ru/series/*",
+        "*://www.kinopoisk.ru/film/*",
+        "*://www.kinopoisk.ru/series/*"
+      ],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; img-src 'self' data: blob: https:;"

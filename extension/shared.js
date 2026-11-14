@@ -1,6 +1,7 @@
 (function (root) {
   const DEFAULTS = {
     enabled: true,
+    askBeforeRedirect: true,
     domain: "www.kinokino.vip",
     siteName: "Kinokino",
     // старое поле — для миграции
