@@ -49,10 +49,13 @@ const filters = {
   yearFrom: null,
   yearTo: null,
   ratingMin: null,
-  sort: "relevance",
+  sortKey: "relevance",
+  sortDir: "desc",
   genre: "",
   country: "",
 };
+
+const sortRow = document.getElementById("filter-sort");
 
 const GENRE_OPTIONS = [
   { value: "", label: "Любой" },
@@ -305,12 +308,33 @@ function syncFiltersFromUi() {
   filters.type = selectedChipValue(document.getElementById("filter-type"));
   filters.ratingMin = selectedChipValue(document.getElementById("filter-rating"));
   filters.ratingMin = filters.ratingMin ? Number(filters.ratingMin) : null;
-  filters.sort = selectedChipValue(document.getElementById("filter-sort")) || "relevance";
 
   const from = yearFromInput.value.trim();
   const to = yearToInput.value.trim();
   filters.yearFrom = from ? Number(from) : null;
   filters.yearTo = to ? Number(to) : null;
+}
+
+function syncSortUi() {
+  for (const btn of sortRow.querySelectorAll(".sort-btn")) {
+    const key = btn.dataset.key;
+    const active = key === filters.sortKey;
+    btn.classList.toggle("active", active);
+    if (key === "relevance") continue;
+    const dir =
+      active
+        ? filters.sortDir
+        : key === "title"
+          ? "asc"
+          : "desc";
+    btn.dataset.dir = dir;
+    const arrow = btn.querySelector(".sort-arrow");
+    if (arrow) arrow.textContent = "↓";
+    if (key === "title") {
+      const label = btn.querySelector(".sort-label");
+      if (label) label.textContent = dir === "asc" ? "А–Я" : "Я–А";
+    }
+  }
 }
 
 function syncUiFromFilters() {
@@ -319,7 +343,7 @@ function syncUiFromFilters() {
     document.getElementById("filter-rating"),
     filters.ratingMin == null ? "" : String(filters.ratingMin)
   );
-  setSingleChip(document.getElementById("filter-sort"), filters.sort || "relevance");
+  syncSortUi();
   yearFromInput.value = filters.yearFrom ?? "";
   yearToInput.value = filters.yearTo ?? "";
   updatePickerLabels();
@@ -363,7 +387,8 @@ function resetFilters() {
   filters.yearFrom = null;
   filters.yearTo = null;
   filters.ratingMin = null;
-  filters.sort = "relevance";
+  filters.sortKey = "relevance";
+  filters.sortDir = "desc";
   filters.genre = "";
   filters.country = "";
   syncUiFromFilters();
@@ -395,19 +420,23 @@ function applyFilters(items) {
     return true;
   });
 
-  switch (filters.sort) {
+  const dir = filters.sortDir === "asc" ? 1 : -1;
+  switch (filters.sortKey) {
     case "rating":
-      list = [...list].sort((a, b) => (itemRating(b) || 0) - (itemRating(a) || 0));
+      list = [...list].sort(
+        (a, b) => dir * ((itemRating(a) || 0) - (itemRating(b) || 0))
+      );
       break;
-    case "year-desc":
-      list = [...list].sort((a, b) => (itemYear(b) || 0) - (itemYear(a) || 0));
-      break;
-    case "year-asc":
-      list = [...list].sort((a, b) => (itemYear(a) || 9999) - (itemYear(b) || 9999));
+    case "year":
+      list = [...list].sort((a, b) => {
+        const ay = itemYear(a) || (dir > 0 ? 9999 : 0);
+        const by = itemYear(b) || (dir > 0 ? 9999 : 0);
+        return dir * (ay - by);
+      });
       break;
     case "title":
-      list = [...list].sort((a, b) =>
-        String(a.title).localeCompare(String(b.title), "ru")
+      list = [...list].sort(
+        (a, b) => dir * String(a.title).localeCompare(String(b.title), "ru")
       );
       break;
     default:
@@ -590,12 +619,29 @@ function bindChipGroup(container, onChange) {
 
 bindChipGroup(document.getElementById("filter-type"));
 bindChipGroup(document.getElementById("filter-rating"));
-bindChipGroup(document.getElementById("filter-sort"), () => {
-  filters.sort = selectedChipValue(document.getElementById("filter-sort")) || "relevance";
+
+sortRow.addEventListener("click", (event) => {
+  const btn = event.target.closest(".sort-btn");
+  if (!btn || !sortRow.contains(btn)) return;
+
+  const key = btn.dataset.key;
+  if (key === "relevance") {
+    filters.sortKey = "relevance";
+    filters.sortDir = "desc";
+  } else if (filters.sortKey === key) {
+    filters.sortDir = filters.sortDir === "asc" ? "desc" : "asc";
+  } else {
+    filters.sortKey = key;
+    filters.sortDir = key === "title" ? "asc" : "desc";
+  }
+
+  syncSortUi();
   if (lastResults.length) {
     renderResults(applyFilters(lastResults));
   }
 });
+
+syncSortUi();
 
 chrome.storage.sync.get(DEFAULTS, (data) => {
   renderEnabled(data.enabled !== false);

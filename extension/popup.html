@@ -63,12 +63,22 @@
           </button>
         </div>
 
-        <div class="sort-row" id="filter-sort" data-single="true" aria-label="Сортировка">
-          <button type="button" class="chip active" data-value="relevance">Поиск</button>
-          <button type="button" class="chip" data-value="rating">Рейтинг</button>
-          <button type="button" class="chip" data-value="year-desc">Новые</button>
-          <button type="button" class="chip" data-value="year-asc">Старые</button>
-          <button type="button" class="chip" data-value="title">А–Я</button>
+        <div class="sort-row" id="filter-sort" aria-label="Сортировка">
+          <button type="button" class="sort-btn active" data-key="relevance" title="По релевантности поиска">
+            Поиск
+          </button>
+          <button type="button" class="sort-btn" data-key="rating" data-dir="desc" title="Сортировка по рейтингу">
+            <span class="sort-label">Рейтинг</span>
+            <span class="sort-arrow" aria-hidden="true">↓</span>
+          </button>
+          <button type="button" class="sort-btn" data-key="year" data-dir="desc" title="Сортировка по году">
+            <span class="sort-label">Год</span>
+            <span class="sort-arrow" aria-hidden="true">↓</span>
+          </button>
+          <button type="button" class="sort-btn" data-key="title" data-dir="asc" title="Сортировка по названию">
+            <span class="sort-label">А–Я</span>
+            <span class="sort-arrow" aria-hidden="true">↓</span>
+          </button>
         </div>
 
         <p id="search-status" class="search-status" hidden></p>

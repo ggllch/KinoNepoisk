@@ -212,6 +212,45 @@ h1 {
   display: none;
 }
 
+.sort-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--border);
+  background: #121212;
+  color: var(--text);
+  border-radius: var(--radius-pill);
+  padding: 6px 11px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sort-btn .sort-arrow {
+  font-size: 13px;
+  line-height: 1;
+  opacity: 0.45;
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.sort-btn.active {
+  border-color: var(--accent);
+  background: rgba(255, 70, 70, 0.16);
+  color: #ffd0d0;
+}
+
+.sort-btn.active .sort-arrow {
+  opacity: 1;
+}
+
+.sort-btn[data-dir="asc"] .sort-arrow {
+  transform: rotate(180deg);
+}
+
+.sort-btn[data-key="relevance"] .sort-arrow {
+  display: none;
+}
+
 .results-slot {
   flex: 1 1 auto;
   min-height: 0;
