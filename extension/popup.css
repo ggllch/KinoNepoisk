@@ -337,25 +337,19 @@ h1 {
 }
 
 .donate {
-  position: absolute;
-  right: 8px;
-  bottom: 8px;
-  z-index: 5;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
-  min-width: 44px;
-  height: 36px;
-  padding: 0 12px;
+  gap: 8px;
+  height: 40px;
+  margin-top: 2px;
   border-radius: var(--radius-pill);
   text-decoration: none;
   color: #fff;
   font-size: 13px;
   font-weight: 700;
-  line-height: 1;
-  background: linear-gradient(135deg, #ff4d6d, #ff2d55 55%, #ff7a45);
-  box-shadow: 0 6px 14px rgba(255, 45, 85, 0.35);
+  background: linear-gradient(110deg, #ff4d6d, #ff2d55 55%, #ff7a45);
+  box-shadow: 0 6px 14px rgba(255, 45, 85, 0.28);
 }
 
 .sheet-overlay {

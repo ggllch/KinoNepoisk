@@ -35,13 +35,23 @@
     const card = document.createElement("div");
     card.className = "knp-card";
 
+    const logo = document.createElement("div");
+    logo.className = "knp-logo";
+    logo.textContent = "K";
+    logo.setAttribute("aria-hidden", "true");
+
+    const copy = document.createElement("div");
+    copy.className = "knp-copy";
+
     const title = document.createElement("p");
     title.className = "knp-title";
     title.textContent = `Открыть на ${siteName}?`;
 
     const text = document.createElement("p");
     text.className = "knp-text";
-    text.textContent = "Можно перейти на зеркало с тем же id прямо сейчас.";
+    text.textContent = "KinoNepoisk предлагает перейти на зеркало с тем же id.";
+
+    copy.append(title, text);
 
     const actions = document.createElement("div");
     actions.className = "knp-actions";
@@ -64,7 +74,7 @@
     });
 
     actions.append(go, close);
-    card.append(title, text, actions);
+    card.append(logo, copy, actions);
     root.append(card);
     document.documentElement.appendChild(root);
   }
