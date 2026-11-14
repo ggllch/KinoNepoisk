@@ -32,6 +32,7 @@ body {
 }
 
 .card {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
@@ -334,30 +335,21 @@ h1 {
 }
 
 .donate {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 36px;
-  flex-shrink: 0;
-  border-radius: var(--radius-pill);
-  text-decoration: none;
-  color: #fff;
-  font-weight: 700;
-  font-size: 12px;
-  background: linear-gradient(110deg, #ff4d6d 0%, #ff2d55 45%, #ff7a45 100%);
-  box-shadow: 0 6px 16px rgba(255, 45, 85, 0.28);
-}
-
-.donate-icon {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 5;
   display: grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.18);
-  font-size: 11px;
+  text-decoration: none;
+  color: #fff;
+  font-size: 13px;
   line-height: 1;
+  background: linear-gradient(135deg, #ff4d6d, #ff2d55);
+  box-shadow: 0 4px 12px rgba(255, 45, 85, 0.35);
 }
 
 .sheet-overlay {
@@ -415,9 +407,11 @@ h1 {
   overflow-x: hidden;
   overflow-y: auto;
   display: grid;
-  gap: 14px;
+  gap: 10px;
+  align-content: start;
+  align-items: stretch;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
 }
 
 #settings-btn.icon-btn {
@@ -434,8 +428,13 @@ h1 {
   font-size: 12px;
 }
 
+.filter-group {
+  display: grid;
+  gap: 6px;
+}
+
 .filter-group h3 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 11px;
   color: var(--muted);
   font-weight: 600;
@@ -531,23 +530,32 @@ h1 {
 .settings-grid label,
 .settings-field {
   display: grid;
-  gap: 5px;
+  gap: 4px;
+  align-content: start;
   font-size: 11px;
   color: var(--muted);
 }
 
+.settings-field select,
+.settings-grid input,
+.year-range input {
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+}
+
 .settings-check {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: #101010;
   cursor: pointer;
   color: var(--text);
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.3;
 }
 
 .settings-check input {

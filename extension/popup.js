@@ -101,12 +101,16 @@ const COUNTRY_OPTIONS = [
 ];
 
 function layoutForCells(n) {
-  const cells = [4, 6, 8, 9, 12].includes(Number(n)) ? Number(n) : 6;
-  let cols = 3;
-  if (cells === 4) cols = 2;
-  else if (cells === 8 || cells === 12) cols = 4;
-  else cols = 3;
-  return { cells, cols, rows: Math.ceil(cells / cols) };
+  // Always prefer 2 rows and grow in width.
+  const allowed = {
+    6: { cols: 3, rows: 2 },
+    8: { cols: 4, rows: 2 },
+    9: { cols: 5, rows: 2 },
+    12: { cols: 6, rows: 2 },
+  };
+  const cells = allowed[Number(n)] ? Number(n) : 6;
+  const { cols, rows } = allowed[cells];
+  return { cells, cols, rows };
 }
 
 function applyGridLayout() {
@@ -116,13 +120,13 @@ function applyGridLayout() {
   const GAP = 8;
   const CARD_PAD = 12;
   const GRID_PAD = 8;
-  const META = 26;
-  const CHROME_H = 148; // header + search + sort + donate + gaps
-  const MAX_W = 560;
-  const MAX_H = 600;
+  const META = 24;
+  const CHROME_H = 128; // header + search + sort + gaps (donate is corner)
+  const MAX_W = 700;
+  const MAX_H = 560;
 
-  // Prefer readable poster size, then shrink to fit browser popup limits.
-  let cellW = cols <= 2 ? 120 : cols === 3 ? 100 : 88;
+  // Wider layouts use slightly smaller posters so height stays compact.
+  let cellW = cols <= 3 ? 104 : cols === 4 ? 92 : cols === 5 ? 84 : 78;
   let popupW = CARD_PAD * 2 + GRID_PAD * 2 + cols * cellW + (cols - 1) * GAP;
   if (popupW > MAX_W) {
     cellW = (MAX_W - CARD_PAD * 2 - GRID_PAD * 2 - (cols - 1) * GAP) / cols;
