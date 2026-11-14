@@ -69,15 +69,15 @@
           </button>
           <button type="button" class="sort-btn" data-key="rating" data-dir="desc" title="Сортировка по рейтингу">
             <span class="sort-label">Рейтинг</span>
-            <span class="sort-arrow" aria-hidden="true">↓</span>
+            <span class="sort-bars" aria-hidden="true"><i></i><i></i><i></i></span>
           </button>
           <button type="button" class="sort-btn" data-key="year" data-dir="desc" title="Сортировка по году">
             <span class="sort-label">Год</span>
-            <span class="sort-arrow" aria-hidden="true">↓</span>
+            <span class="sort-bars" aria-hidden="true"><i></i><i></i><i></i></span>
           </button>
           <button type="button" class="sort-btn" data-key="title" data-dir="asc" title="Сортировка по названию">
             <span class="sort-label">А–Я</span>
-            <span class="sort-arrow" aria-hidden="true">↓</span>
+            <span class="sort-bars" aria-hidden="true"><i></i><i></i><i></i></span>
           </button>
         </div>
 
@@ -94,7 +94,7 @@
     </main>
 
     <div id="settings-overlay" class="sheet-overlay" hidden>
-      <div class="sheet" role="dialog" aria-label="Настройки">
+      <div class="sheet settings-sheet" role="dialog" aria-label="Настройки">
         <div class="sheet-head">
           <strong>Настройки</strong>
           <button id="settings-close" type="button" class="icon-btn" aria-label="Закрыть">✕</button>
@@ -127,16 +127,15 @@
             <button id="save-settings" type="button" class="btn">Сохранить</button>
             <span id="save-status" class="save-status" hidden></span>
           </div>
-          <a
-            class="donate"
-            href="https://www.donationalerts.com/r/11ch"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span aria-hidden="true">♥</span>
-            <span>Поддержать донатом</span>
-          </a>
         </div>
+        <a
+          class="donate"
+          href="https://www.donationalerts.com/r/11ch"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Донат"
+          aria-label="Донат"
+        >♥</a>
       </div>
     </div>
 

@@ -219,12 +219,16 @@ function setWheelValue(value, smooth = false) {
   const target =
     items.find((item) => item.dataset.value === String(value ?? "")) || items[0];
   if (!target) return;
-  const top =
-    target.offsetTop - (wheelScroller.clientHeight / 2 - target.offsetHeight / 2);
-  wheelScroller.scrollTo({
-    top: Math.max(0, top),
-    behavior: smooth ? "smooth" : "auto",
-  });
+  const height = wheelScroller.clientHeight || target.offsetHeight * 5;
+  const top = Math.max(
+    0,
+    target.offsetTop - (height / 2 - target.offsetHeight / 2)
+  );
+  if (smooth) {
+    wheelScroller.scrollTo({ top, behavior: "smooth" });
+  } else {
+    wheelScroller.scrollTop = top;
+  }
   markWheelSelection();
 }
 
@@ -235,7 +239,12 @@ function openWheel(kind) {
   wheelTitle.textContent = kind === "genre" ? "Жанр" : "Страна";
   buildWheel(options);
   wheelOverlay.hidden = false;
-  requestAnimationFrame(() => setWheelValue(value));
+  // Wait until overlay is laid out, then center the selected row.
+  requestAnimationFrame(() => {
+    void wheelScroller.offsetHeight;
+    setWheelValue(value, false);
+    requestAnimationFrame(() => setWheelValue(value, false));
+  });
 }
 
 function closeWheel(commit) {
@@ -328,8 +337,6 @@ function syncSortUi() {
           ? "asc"
           : "desc";
     btn.dataset.dir = dir;
-    const arrow = btn.querySelector(".sort-arrow");
-    if (arrow) arrow.textContent = "↓";
     if (key === "title") {
       const label = btn.querySelector(".sort-label");
       if (label) label.textContent = dir === "asc" ? "А–Я" : "Я–А";
