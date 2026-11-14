@@ -1,10 +1,10 @@
 # KinoNepoisk (для друзей)
 
-Локальная сборка расширения **v1.4.2**.
+Локальная сборка расширения **v1.4.3**.
 
 ## Скачать
 
-В [Releases](../../releases) лежит файл `for-friends-kinonepoisk-1.4.2.zip`.
+В [Releases](https://github.com/ggllch/KinoNepoisk/releases/latest) лежит файл `KinoNepoisk-1.4.3.zip`.
 
 ## Установка (Chrome / Edge / Яндекс)
 
@@ -21,4 +21,4 @@
 
 ## Важно
 
-Это приватный репозиторий для личного/дружеского использования. Не путать с публичным продуктом [HostShift](https://github.com/ggllch/HostShift).
+Дружеская сборка. Не путать с публичным продуктом [HostShift](https://github.com/ggllch/HostShift).
