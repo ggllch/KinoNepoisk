@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KinoNepoisk</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="card">
+      <header class="header">
+        <div class="logo" aria-hidden="true">K</div>
+        <div class="header-text">
+          <h1>KinoNepoisk</h1>
+          <p class="subtitle" id="site-subtitle">Kinokino</p>
+        </div>
+        <div class="header-actions">
+          <button
+            id="settings-btn"
+            type="button"
+            class="icon-btn"
+            title="Настройки"
+            aria-label="Настройки"
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.55-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.77 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.89 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.43.34.68.22l2.39-.96c.5.39 1.04.7 1.63.94l.36 2.54c.05.24.26.42.5.42h3.84c.24 0 .45-.18.5-.42l.36-2.54c.59-.24 1.13-.55 1.63-.94l2.39.96c.25.12.54.02.68-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7z"
+              />
+            </svg>
+          </button>
+          <label class="toggle-mini" for="enabled" title="Автозамена">
+            <input id="enabled" type="checkbox" checked />
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </div>
+      </header>
+
+      <section class="search-block">
+        <div class="search-row">
+          <input
+            id="search"
+            type="search"
+            placeholder="Поиск фильма или сериала…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button
+            id="filters-btn"
+            type="button"
+            class="filters-btn"
+            title="Фильтры"
+            aria-label="Фильтры"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M3 5h18l-7 8v5l-4 2v-7L3 5z"
+              />
+            </svg>
+            <span id="filters-badge" class="filters-badge" hidden>0</span>
+          </button>
+        </div>
+
+        <p id="search-status" class="search-status" hidden></p>
+      </section>
+
+      <section class="results-slot" aria-label="Результаты">
+        <div id="results" class="results"></div>
+      </section>
+
+      <a
+        class="donate"
+        href="https://www.donationalerts.com/r/11ch"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span class="donate-icon" aria-hidden="true">♥</span>
+        <span>Донат</span>
+      </a>
+    </main>
+
+    <div id="settings-overlay" class="filters-overlay" hidden>
+      <div class="filters-sheet settings-sheet" role="dialog" aria-label="Настройки">
+        <div class="filters-sheet-head">
+          <strong>Настройки</strong>
+          <button id="settings-close" type="button" class="icon-btn" aria-label="Закрыть">
+            ✕
+          </button>
+        </div>
+        <div class="filters-sheet-body">
+          <div class="settings-grid">
+            <label>
+              Домен
+              <input id="domain" type="text" spellcheck="false" placeholder="www.kinokino.vip" />
+            </label>
+            <label>
+              Имя
+              <input id="site-name" type="text" spellcheck="false" placeholder="Kinokino" />
+            </label>
+          </div>
+          <div class="settings-actions">
+            <button id="save-settings" type="button" class="btn">Сохранить</button>
+            <span id="save-status" class="save-status" hidden></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="filters-overlay" class="filters-overlay" hidden>
+      <div class="filters-sheet" role="dialog" aria-label="Фильтры">
+        <div class="filters-sheet-head">
+          <strong>Фильтры</strong>
+          <button id="filters-close" type="button" class="icon-btn" aria-label="Закрыть">
+            ✕
+          </button>
+        </div>
+
+        <div class="filters-sheet-body">
+          <section class="filter-group">
+            <h3>Тип</h3>
+            <div class="chips" id="filter-type" data-single="true">
+              <button type="button" class="chip active" data-value="">Все</button>
+              <button type="button" class="chip" data-value="film">Фильмы</button>
+              <button type="button" class="chip" data-value="series">Сериалы</button>
+            </div>
+          </section>
+
+          <section class="filter-group">
+            <h3>Годы</h3>
+            <div class="year-range">
+              <input id="year-from" type="number" min="1900" max="2100" placeholder="от" />
+              <span>—</span>
+              <input id="year-to" type="number" min="1900" max="2100" placeholder="до" />
+            </div>
+          </section>
+
+          <section class="filter-group">
+            <h3>Рейтинг Кинопоиска</h3>
+            <div class="chips" id="filter-rating" data-single="true">
+              <button type="button" class="chip active" data-value="">Любой</button>
+              <button type="button" class="chip" data-value="6">6+</button>
+              <button type="button" class="chip" data-value="7">7+</button>
+              <button type="button" class="chip" data-value="8">8+</button>
+              <button type="button" class="chip" data-value="9">9+</button>
+            </div>
+          </section>
+
+          <section class="filter-group">
+            <h3>Сортировка</h3>
+            <div class="chips" id="filter-sort" data-single="true">
+              <button type="button" class="chip active" data-value="relevance">Поиск</button>
+              <button type="button" class="chip" data-value="rating">Рейтинг</button>
+              <button type="button" class="chip" data-value="year-desc">Новые</button>
+              <button type="button" class="chip" data-value="year-asc">Старые</button>
+              <button type="button" class="chip" data-value="title">А–Я</button>
+            </div>
+          </section>
+
+          <section class="filter-group">
+            <h3>Жанры</h3>
+            <div class="chips wrap" id="filter-genres">
+              <button type="button" class="chip" data-value="боевик">Боевик</button>
+              <button type="button" class="chip" data-value="комедия">Комедия</button>
+              <button type="button" class="chip" data-value="драма">Драма</button>
+              <button type="button" class="chip" data-value="фантастика">Фантастика</button>
+              <button type="button" class="chip" data-value="фэнтези">Фэнтези</button>
+              <button type="button" class="chip" data-value="триллер">Триллер</button>
+              <button type="button" class="chip" data-value="ужасы">Ужасы</button>
+              <button type="button" class="chip" data-value="мелодрама">Мелодрама</button>
+              <button type="button" class="chip" data-value="детектив">Детектив</button>
+              <button type="button" class="chip" data-value="приключения">Приключения</button>
+              <button type="button" class="chip" data-value="криминал">Криминал</button>
+              <button type="button" class="chip" data-value="военный">Военный</button>
+              <button type="button" class="chip" data-value="история">История</button>
+              <button type="button" class="chip" data-value="биография">Биография</button>
+              <button type="button" class="chip" data-value="спорт">Спорт</button>
+              <button type="button" class="chip" data-value="музыка">Музыка</button>
+              <button type="button" class="chip" data-value="мюзикл">Мюзикл</button>
+              <button type="button" class="chip" data-value="western">Вестерн</button>
+              <button type="button" class="chip" data-value="мультфильм">Мультфильм</button>
+              <button type="button" class="chip" data-value="аниме">Аниме</button>
+              <button type="button" class="chip" data-value="семейный">Семейный</button>
+              <button type="button" class="chip" data-value="детский">Детский</button>
+              <button type="button" class="chip" data-value="документальный">Документальный</button>
+              <button type="button" class="chip" data-value="короткометражка">Короткий метр</button>
+            </div>
+          </section>
+
+          <section class="filter-group">
+            <h3>Страны</h3>
+            <div class="chips wrap" id="filter-countries">
+              <button type="button" class="chip" data-value="Россия">Россия</button>
+              <button type="button" class="chip" data-value="США">США</button>
+              <button type="button" class="chip" data-value="СССР">СССР</button>
+              <button type="button" class="chip" data-value="Великобритания">Британия</button>
+              <button type="button" class="chip" data-value="Франция">Франция</button>
+              <button type="button" class="chip" data-value="Германия">Германия</button>
+              <button type="button" class="chip" data-value="Корея Южная">Корея</button>
+              <button type="button" class="chip" data-value="Япония">Япония</button>
+              <button type="button" class="chip" data-value="Китай">Китай</button>
+              <button type="button" class="chip" data-value="Индия">Индия</button>
+              <button type="button" class="chip" data-value="Испания">Испания</button>
+              <button type="button" class="chip" data-value="Италия">Италия</button>
+              <button type="button" class="chip" data-value="Канада">Канада</button>
+              <button type="button" class="chip" data-value="Турция">Турция</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="filters-sheet-foot">
+          <button id="filters-reset" type="button" class="btn ghost">Сбросить</button>
+          <button id="filters-apply" type="button" class="btn">Применить</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
