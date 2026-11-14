@@ -112,18 +112,54 @@ function layoutForCells(n) {
 function applyGridLayout() {
   const { cells, cols, rows } = layoutForCells(gridCells);
   gridCells = cells;
+
+  const GAP = 8;
+  const CARD_PAD = 12;
+  const GRID_PAD = 8;
+  const META = 26;
+  const CHROME_H = 148; // header + search + sort + donate + gaps
+  const MAX_W = 560;
+  const MAX_H = 600;
+
+  // Prefer readable poster size, then shrink to fit browser popup limits.
+  let cellW = cols <= 2 ? 120 : cols === 3 ? 100 : 88;
+  let popupW = CARD_PAD * 2 + GRID_PAD * 2 + cols * cellW + (cols - 1) * GAP;
+  if (popupW > MAX_W) {
+    cellW = (MAX_W - CARD_PAD * 2 - GRID_PAD * 2 - (cols - 1) * GAP) / cols;
+    popupW = MAX_W;
+  }
+
+  let cellH = cellW * 1.5 + META;
+  let resultsH = rows * cellH + (rows - 1) * GAP + GRID_PAD * 2;
+  let popupH = CHROME_H + resultsH;
+
+  if (popupH > MAX_H) {
+    resultsH = MAX_H - CHROME_H;
+    cellH = (resultsH - GRID_PAD * 2 - (rows - 1) * GAP) / rows;
+    cellW = Math.max(56, (cellH - META) / 1.5);
+    popupW = Math.min(
+      MAX_W,
+      Math.round(CARD_PAD * 2 + GRID_PAD * 2 + cols * cellW + (cols - 1) * GAP)
+    );
+    cellH = cellW * 1.5 + META;
+    resultsH = rows * cellH + (rows - 1) * GAP + GRID_PAD * 2;
+    popupH = Math.min(MAX_H, CHROME_H + resultsH);
+  }
+
+  popupW = Math.round(popupW);
+  popupH = Math.round(popupH);
+  resultsH = Math.round(resultsH);
+  cellW = Math.round(cellW);
+
   document.documentElement.style.setProperty("--cols", String(cols));
   document.documentElement.style.setProperty("--rows", String(rows));
-
-  const cardPad = 24;
-  const gridPad = 16;
-  const gap = 8;
-  const meta = 28;
-  const width = 360 - cardPad - gridPad;
-  const cellW = (width - (cols - 1) * gap) / cols;
-  const cellH = cellW * 1.5 + meta;
-  const height = rows * cellH + (rows - 1) * gap + gridPad;
-  resultsEl.style.height = `${Math.min(Math.round(height), 420)}px`;
+  document.documentElement.style.setProperty("--cell-w", `${cellW}px`);
+  document.documentElement.style.width = `${popupW}px`;
+  document.body.style.width = `${popupW}px`;
+  document.documentElement.style.height = `${popupH}px`;
+  document.body.style.height = `${popupH}px`;
+  resultsEl.style.height = `${resultsH}px`;
+  resultsEl.style.width = "100%";
 }
 
 function optionLabel(options, value) {
