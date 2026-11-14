@@ -239,11 +239,28 @@ async function loadPoster(img, item) {
   img.replaceWith(ph);
 }
 
+function renderEmptySlot() {
+  const empty = document.createElement("div");
+  empty.className = "result-empty";
+  empty.setAttribute("aria-hidden", "true");
+  const tile = document.createElement("div");
+  tile.className = "result-empty-tile";
+  empty.appendChild(tile);
+  resultsEl.appendChild(empty);
+}
+
 function renderResults(items) {
   clearObjectUrls();
   resultsEl.innerHTML = "";
 
   const list = items || [];
+  if (!list.length) {
+    resultsEl.classList.add("is-empty");
+    for (let i = 0; i < 6; i += 1) renderEmptySlot();
+    return;
+  }
+
+  resultsEl.classList.remove("is-empty");
   for (const item of list) {
     const btn = document.createElement("button");
     btn.type = "button";
@@ -275,6 +292,8 @@ function renderResults(items) {
     resultsEl.appendChild(btn);
   }
 }
+
+renderResults([]);
 
 async function openResult(item) {
   const response = await chrome.runtime.sendMessage({
