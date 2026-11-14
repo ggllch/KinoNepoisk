@@ -121,9 +121,9 @@ function applyGridLayout() {
   const { cells, cols, rows } = layoutForCells(gridCells);
   gridCells = cells;
 
-  const GAP = 6;
+  const GAP = 8;
   const CARD_PAD = 10;
-  const GRID_PAD = 6;
+  const GRID_PAD = 8;
   const META = 28;
   const CHROME_H = 122;
   const MAX_W = 720;
@@ -156,11 +156,9 @@ function applyGridLayout() {
   popupW = Math.round(popupW);
   popupH = Math.round(popupH);
   resultsH = Math.round(resultsH);
-  cellW = Math.round(cellW);
 
   document.documentElement.style.setProperty("--cols", String(cols));
   document.documentElement.style.setProperty("--rows", String(rows));
-  document.documentElement.style.setProperty("--cell-w", `${cellW}px`);
   document.documentElement.style.width = `${popupW}px`;
   document.body.style.width = `${popupW}px`;
   document.documentElement.style.height = `${popupH}px`;
