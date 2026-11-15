@@ -243,6 +243,122 @@ async function searchKinopoisk(keyword) {
   return searchGraphql(keyword);
 }
 
+function uniqMovies(items) {
+  const seen = new Set();
+  const list = [];
+  for (const item of items || []) {
+    if (!item?.id || seen.has(item.id)) continue;
+    seen.add(item.id);
+    list.push(item);
+  }
+  return list;
+}
+
+function shuffle(items) {
+  const list = [...items];
+  for (let i = list.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+
+function pickRandom(arr, count) {
+  return shuffle(arr).slice(0, count);
+}
+
+async function searchMany(queries, perQuery = 12) {
+  const batches = await Promise.all(
+    queries.map(async (query) => {
+      try {
+        return await searchKinopoisk(query);
+      } catch (_) {
+        return [];
+      }
+    })
+  );
+  return uniqMovies(batches.flat()).slice(0, Math.max(perQuery * queries.length, 20));
+}
+
+async function fetchNovelties(limit = 12) {
+  const year = new Date().getFullYear();
+  const queries = [
+    String(year),
+    String(year - 1),
+    "премьера",
+    "новинки",
+    "новые сериалы",
+  ];
+  const list = await searchMany(queries, 10);
+  list.sort((a, b) => (b.yearStart || 0) - (a.yearStart || 0));
+  return list.slice(0, limit);
+}
+
+async function fetchRandom(limit = 12) {
+  const year = new Date().getFullYear();
+  const years = [
+    year,
+    year - 1,
+    year - 2,
+    year - 3,
+    year - 5,
+    year - 8,
+    year - 12,
+  ];
+  const filmSeeds = [
+    "боевик",
+    "комедия",
+    "драма",
+    "триллер",
+    "фантастика",
+    "детектив",
+    "ужасы",
+    "приключения",
+    ...pickRandom(years, 3).map(String),
+  ];
+  const seriesSeeds = [
+    "сериал",
+    "сериал драма",
+    "сериал комедия",
+    "мини-сериал",
+    "детектив сериал",
+    ...pickRandom(years, 2).map((y) => `сериал ${y}`),
+  ];
+  const cartoonSeeds = [
+    "мультфильм",
+    "мультсериал",
+    "анимация",
+    "семейный мультфильм",
+    "детский мультфильм",
+  ];
+  const animeSeeds = ["аниме", "аниме сериал", "японская анимация", "аниме фильм"];
+
+  const [films, series, cartoons, anime] = await Promise.all([
+    searchMany(pickRandom(filmSeeds, 3), 10),
+    searchMany(pickRandom(seriesSeeds, 3), 10),
+    searchMany(pickRandom(cartoonSeeds, 2), 10),
+    searchMany(pickRandom(animeSeeds, 2), 10),
+  ]);
+
+  const filmOnly = films.filter((item) => item.type === "film");
+  const seriesOnly = series.filter((item) => item.type === "series");
+
+  // Aim for a mixed shelf: films, series, cartoons, anime.
+  const mix = uniqMovies([
+    ...pickRandom(filmOnly, Math.max(2, Math.ceil(limit * 0.35))),
+    ...pickRandom(seriesOnly, Math.max(2, Math.ceil(limit * 0.25))),
+    ...pickRandom(cartoons, Math.max(1, Math.ceil(limit * 0.2))),
+    ...pickRandom(anime, Math.max(1, Math.ceil(limit * 0.2))),
+  ]);
+
+  if (mix.length >= limit) return shuffle(mix).slice(0, limit);
+
+  const filler = uniqMovies([...films, ...series, ...cartoons, ...anime]).filter(
+    (item) => !mix.some((x) => x.id === item.id)
+  );
+  return shuffle([...mix, ...pickRandom(filler, limit - mix.length)]).slice(0, limit);
+}
+
 chrome.runtime.onInstalled.addListener(async () => {
   const current = await chrome.storage.sync.get(DEFAULTS);
   let domain = current.domain;
@@ -287,6 +403,24 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.type === "search") {
     searchKinopoisk(message.query || "")
+      .then((results) => sendResponse({ ok: true, results }))
+      .catch((error) =>
+        sendResponse({ ok: false, error: error?.message || String(error) })
+      );
+    return true;
+  }
+
+  if (message?.type === "novelties") {
+    fetchNovelties(Number(message.limit) || 12)
+      .then((results) => sendResponse({ ok: true, results }))
+      .catch((error) =>
+        sendResponse({ ok: false, error: error?.message || String(error) })
+      );
+    return true;
+  }
+
+  if (message?.type === "random") {
+    fetchRandom(Number(message.limit) || 12)
       .then((results) => sendResponse({ ok: true, results }))
       .catch((error) =>
         sendResponse({ ok: false, error: error?.message || String(error) })

@@ -13,8 +13,10 @@ const gridCellsInput = document.getElementById("grid-cells");
 const saveButton = document.getElementById("save-settings");
 const saveStatus = document.getElementById("save-status");
 const searchInput = document.getElementById("search");
+const randomBtn = document.getElementById("random-btn");
 const resultsEl = document.getElementById("results");
 const resultsGrid = document.getElementById("results-grid");
+const resultsHint = document.getElementById("results-hint");
 const searchStatus = document.getElementById("search-status");
 const filtersBtn = document.getElementById("filters-btn");
 const filtersBadge = document.getElementById("filters-badge");
@@ -40,9 +42,20 @@ const wheelDone = document.getElementById("wheel-done");
 let searchTimer = null;
 let searchSeq = 0;
 let lastResults = [];
+let noveltyResults = [];
+let browseMode = "novelties"; // novelties | random | search
 let gridCells = DEFAULTS.gridCells;
 let activeWheel = null;
 const objectUrls = new Set();
+
+function gridLimit() {
+  return layoutForCells(gridCells).cells;
+}
+
+function setBrowseMode(mode) {
+  browseMode = mode;
+  randomBtn.classList.toggle("active", mode === "random");
+}
 
 const filters = {
   type: "",
@@ -567,17 +580,82 @@ function buildSearchQuery(raw) {
   return parts.filter(Boolean).join(" ").trim();
 }
 
+async function loadNovelties() {
+  const seq = ++searchSeq;
+  setBrowseMode("novelties");
+  resultsHint.textContent = "Загружаю новинки…";
+  showSearchStatus("Новинки…");
+  renderResults([]);
+
+  const response = await chrome.runtime.sendMessage({
+    type: "novelties",
+    limit: Math.max(gridLimit(), 12),
+  });
+
+  if (seq !== searchSeq) return;
+
+  if (!response?.ok) {
+    noveltyResults = [];
+    lastResults = [];
+    resultsHint.textContent = "Не удалось загрузить новинки";
+    renderResults([]);
+    showSearchStatus(response?.error || "Ошибка загрузки новинок", true);
+    return;
+  }
+
+  noveltyResults = response.results || [];
+  lastResults = noveltyResults;
+  const filtered = applyFilters(noveltyResults).slice(0, gridLimit());
+  renderResults(filtered);
+  showSearchStatus(filtered.length ? "Новинки" : "Новинок пока нет");
+}
+
+async function loadRandom() {
+  const seq = ++searchSeq;
+  setBrowseMode("random");
+  searchInput.value = "";
+  resultsHint.textContent = "Подбираю случайные…";
+  showSearchStatus("Рандом…");
+  renderResults([]);
+
+  const response = await chrome.runtime.sendMessage({
+    type: "random",
+    limit: Math.max(gridLimit(), 12),
+  });
+
+  if (seq !== searchSeq) return;
+
+  if (!response?.ok) {
+    lastResults = [];
+    resultsHint.textContent = "Не удалось собрать подборку";
+    renderResults([]);
+    showSearchStatus(response?.error || "Ошибка рандома", true);
+    return;
+  }
+
+  lastResults = response.results || [];
+  const filtered = applyFilters(lastResults).slice(0, gridLimit());
+  renderResults(filtered);
+  showSearchStatus(filtered.length ? "Случайная подборка" : "Ничего не нашлось");
+}
+
 async function runSearch(query) {
   const seq = ++searchSeq;
   const q = buildSearchQuery(query);
 
   if (q.length < 2) {
-    lastResults = [];
-    renderResults([]);
-    showSearchStatus("");
+    if (noveltyResults.length) {
+      setBrowseMode("novelties");
+      lastResults = noveltyResults;
+      renderResults(applyFilters(noveltyResults).slice(0, gridLimit()));
+      showSearchStatus("Новинки");
+      return;
+    }
+    await loadNovelties();
     return;
   }
 
+  setBrowseMode("search");
   showSearchStatus("Ищу…");
   const response = await chrome.runtime.sendMessage({
     type: "search",
@@ -642,7 +720,10 @@ sortRow.addEventListener("click", (event) => {
 
   syncSortUi();
   if (lastResults.length) {
-    renderResults(applyFilters(lastResults));
+    const list = applyFilters(lastResults);
+    renderResults(
+      browseMode === "search" ? list : list.slice(0, gridLimit())
+    );
   }
 });
 
@@ -661,7 +742,7 @@ chrome.storage.sync.get(DEFAULTS, (data) => {
   domainInput.value = domain;
   siteNameInput.value = siteName;
   renderSiteLabel(siteName);
-  renderResults([]);
+  loadNovelties();
 });
 
 checkbox.addEventListener("change", () => {
@@ -676,7 +757,16 @@ askBeforeInput.addEventListener("change", () => {
 gridCellsInput.addEventListener("change", () => {
   gridCells = layoutForCells(gridCellsInput.value).cells;
   chrome.storage.sync.set({ gridCells });
-  renderResults(lastResults.length ? applyFilters(lastResults) : []);
+  if (!lastResults.length) {
+    renderResults([]);
+    return;
+  }
+  const list = applyFilters(lastResults);
+  renderResults(browseMode === "search" ? list : list.slice(0, gridLimit()));
+});
+
+randomBtn.addEventListener("click", () => {
+  loadRandom();
 });
 
 saveButton.addEventListener("click", () => {
@@ -735,7 +825,13 @@ filtersApply.addEventListener("click", () => {
   syncFiltersFromUi();
   updateFiltersButton();
   closeFilters();
-  scheduleSearch();
+  if (searchInput.value.trim().length >= 2) {
+    scheduleSearch();
+  } else if (browseMode === "random") {
+    loadRandom();
+  } else {
+    loadNovelties();
+  }
 });
 
 searchInput.addEventListener("input", scheduleSearch);
@@ -755,9 +851,7 @@ searchInput.addEventListener("keydown", (event) => {
       return;
     }
     searchInput.value = "";
-    lastResults = [];
-    renderResults([]);
-    showSearchStatus("");
+    loadNovelties();
   }
 });
 
@@ -770,4 +864,3 @@ document.addEventListener("keydown", (event) => {
 
 updateFiltersButton();
 applyGridLayout();
-renderResults([]);

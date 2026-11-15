@@ -164,7 +164,8 @@ h1 {
 }
 
 .filters-btn,
-.icon-btn {
+.icon-btn,
+.action-btn {
   position: relative;
   flex: 0 0 40px;
   width: 40px;
@@ -177,6 +178,22 @@ h1 {
   color: var(--text);
   cursor: pointer;
   padding: 0;
+}
+
+.action-btn {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 72px;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.action-btn:hover,
+.action-btn.active {
+  border-color: var(--accent);
+  color: #ffb4b4;
 }
 
 .filters-btn.active {

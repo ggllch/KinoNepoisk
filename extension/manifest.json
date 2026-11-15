@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "KinoNepoisk",
-  "version": "1.4.13",
-  "description": "Автозамена ссылок Кинопоиска, поиск фильмов и настраиваемый домен",
+  "version": "1.5.0",
+  "description": "Поиск, новинки, рандом и переход с Кинопоиска на выбранное зеркало",
   "permissions": ["storage", "webNavigation", "tabs"],
   "host_permissions": [
     "*://kinopoisk.ru/*",
